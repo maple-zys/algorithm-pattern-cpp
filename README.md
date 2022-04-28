@@ -6,4 +6,4 @@
 - [算法快速入门](./Introduction/quickstart.md)
 
 ## 数据结构篇
-- [二叉树](./data_structure/Binary_tree.md)&#xf333;
+- [二叉树](./data_structure/Binary_tree.md)
