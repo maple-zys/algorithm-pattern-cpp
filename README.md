@@ -7,3 +7,4 @@
 
 ## 数据结构篇
 - [二叉树](./data_structure/Binary_tree.md)
+- [链表](./data_structure/linked_list.md)
