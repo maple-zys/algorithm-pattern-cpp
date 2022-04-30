@@ -114,3 +114,81 @@ public:
     }
 };
 ```
+
+## [合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists/)
+```
+将两个升序链表合并为一个新的 升序 链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。 
+```
+- 思路1：递归
+```cpp
+class Solution {
+public:
+    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+        if (!list1) {return list2;}
+        if (!list2) {return list1;}
+        if (list1->val < list2->val){
+            list1->next = mergeTwoLists(list1->next, list2);
+            return list1;
+        }else{
+            list2->next = mergeTwoLists(list1, list2->next);
+            return list2;
+        }
+    }
+};
+```
+- 思路2：非递归，通过 dummy node 链表，连接各个元素
+```cpp
+class Solution {
+public:
+    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+        ListNode* dummy = new ListNode(-1);
+        ListNode* tail = dummy;
+        while (list1 && list2){
+            if (list1->val > list2->val){
+                tail->next = list2;
+                list2 = list2->next;
+            }else{
+                tail->next = list1;
+                list1 = list1->next;
+            }
+            tail = tail->next;
+        }
+        if (!list1){
+            tail->next = list2;
+        }else{
+            tail->next = list1;
+        }
+        return dummy->next;
+    }
+};
+```
+
+## [分割链表](https://leetcode-cn.com/problems/partition-list/)
+```
+给你一个链表的头节点 head 和一个特定值 x ，请你对链表进行分隔，使得所有小于 x 的节点都出现在 大于或等于 x 的节点之前。
+你应当保留两个分区中每个节点的初始相对位置。
+```
+- 思路：将大于 x 的节点，放到另外一个链表，最后连接这两个链表
+```cpp
+class Solution {
+public:
+    ListNode* partition(ListNode* head, int x) {
+        ListNode* greater = new ListNode(-1);
+        ListNode* g_node = greater;
+        ListNode* dummy = new ListNode(-1, head);
+        ListNode* d_node = dummy;
+        while (d_node->next){
+            if (d_node->next->val >= x){
+                g_node->next = d_node->next;
+                g_node = g_node->next;
+                d_node->next = d_node->next->next;
+            }else{
+                d_node = d_node->next;
+            }
+        }
+        g_node->next = nullptr;
+        d_node->next = greater->next;
+        return dummy->next;
+    }
+};
+```
