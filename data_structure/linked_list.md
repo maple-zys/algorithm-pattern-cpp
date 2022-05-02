@@ -192,3 +192,225 @@ public:
     }
 };
 ```
+
+## [排序链表](https://leetcode-cn.com/problems/sort-list/)
+```
+给你链表的头结点 head ，请将其按 升序 排列并返回 排序后的链表 。 复杂度为O(nlogn)
+```
+- 思路：链表归并排序。
+```cpp
+class Solution {
+public:
+    ListNode* _findmid(ListNode* head){
+        ListNode* slow = head;
+        ListNode* fast = head->next;
+        while (fast && fast->next){
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        return slow;
+    }
+
+    ListNode* _merge(ListNode* l1, ListNode* l2){
+        ListNode* l_merge = new ListNode();
+        ListNode* tail = l_merge;
+        while (l1 && l2){
+            if (l1->val > l2->val){
+                tail->next = l2;
+                l2 = l2->next;
+            }else{
+                tail->next = l1;
+                l1 = l1->next;
+            }
+            tail = tail->next;
+        }
+        tail->next = (l1) ? l1 : l2;
+        return l_merge->next;
+    }
+
+    ListNode* sortList(ListNode* head) {
+        if (!head || !head->next) {return head;}
+        ListNode* mid = _findmid(head);
+        ListNode* tail = mid->next;
+        mid->next = nullptr;
+        return _merge(sortList(head), sortList(tail));
+    }
+};
+```
+注意：
+1. 快慢指针找中点时，fast和fast->next都需要判断是否为空；
+2. 递归时，需要将中间节点断开(mid->next = nullptr;)；
+3. 递归停止条件为head或者head->next是空；
+
+## [重排链表](https://leetcode-cn.com/problems/reorder-list/)
+```
+给定一个单链表 L 的头节点 head ，单链表 L 表示为：
+L0 → L1 → … → Ln - 1 → Ln
+请将其重新排列后变为：
+L0 → Ln → L1 → Ln - 1 → L2 → Ln - 2 → …
+不能只是单纯的改变节点内部的值，而是需要实际的进行节点交换。
+```
+- 思路1：每次将当前结点之后的链表翻转一次
+```cpp
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode* pre = nullptr;
+        ListNode* cur = head;
+        while (cur) {
+            ListNode* next = cur->next;
+            cur->next = pre;
+            pre = cur;
+            cur = next;
+        }
+        return pre;
+    }
+
+    void reorderList(ListNode* head) {
+        if (!head || !head->next) {return;}
+        ListNode* node = head;
+        while (node->next){
+            node->next = reverseList(node->next);
+            node = node->next;
+        }
+        return;
+    }
+};
+```
+- 思路2：利用线性表存储该链表，直接按顺序访问指定元素，重建该链表
+```cpp
+class Solution {
+public:
+    void reorderList(ListNode* head) {
+        if (!head || !head->next) {return;}
+        vector<ListNode*> vec;
+        ListNode* node = head;
+        while (node){
+            vec.emplace_back(node);
+            node = node->next;
+        }
+        int i = 0, j = vec.size() - 1;
+        while (i < j){
+            vec[i]->next = vec[j];
+            ++i;
+            if (i == j){
+                break;
+            }
+            vec[j]->next = vec[i];
+            --j;
+        }
+        vec[i]->next = nullptr;
+        return;
+    }
+};
+```
+
+## [环形链表1](https://leetcode-cn.com/problems/linked-list-cycle/)
+```
+给你一个链表的头节点 head ，判断链表中是否有环。
+```
+- 思路：设置快慢指针，如果有环，快指针一定会追上慢指针，如果没有环，快指针会指向nullptr
+
+```cpp
+class Solution {
+public:
+    bool hasCycle(ListNode *head) {
+        ListNode* slow = head, *fast = head;
+        while (fast && fast->next){
+            slow = slow->next;
+            fast = fast->next->next;
+            if (fast == slow){
+                return true;
+            }
+        }
+        return false;
+    }
+};
+```
+
+## [环形链表2](https://leetcode-cn.com/problems/linked-list-cycle-ii/)
+```
+给定一个链表的头节点  head ，返回链表开始入环的第一个节点。 如果链表无环，则返回 null。
+```
+- 思路：快慢指针，如果无环，快指针会指向nullptr，如果有环，快慢指针会相遇，相遇后将快指针重新指向head，两个指针均一步一步往下跳，再次相遇时，便为环的入口
+
+```cpp
+class Solution {
+public:
+    ListNode *detectCycle(ListNode *head) {
+        ListNode* slow = head, *fast = head;
+        while (fast && fast->next){
+            slow = slow->next;
+            fast = fast->next->next;
+            if (fast == slow){
+                fast = head;
+                while (fast != slow){
+                    slow = slow->next;
+                    fast = fast->next;
+                }
+                return fast;
+            }
+        }
+        return nullptr;
+    }
+};
+```
+
+## [回文链表](https://leetcode-cn.com/problems/palindrome-linked-list/)
+```
+给你一个单链表的头节点 head ，请你判断该链表是否为回文链表。如果是，返回 true ；否则，返回 false 。
+```
+- 思路：用栈存储前半链表的值，然后在遍历后半链表时一一弹出，进行比对。
+
+```cpp
+class Solution {
+public:
+    bool isPalindrome(ListNode* head) {
+        stack<int> st;
+        ListNode* slow = head, *fast = head;
+        while (fast && fast->next){
+            st.push(slow->val);
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        if (fast){
+            slow = slow->next;
+        }
+        while (!st.empty()){
+            if (slow->val != st.top()){
+                return false;
+            }
+            st.pop();
+            slow = slow->next;
+        }
+        return true;
+    }
+};
+```
+
+## [复制带随机指针的链表](https://leetcode-cn.com/problems/copy-list-with-random-pointer/)
+```
+给你一个长度为 n 的链表，每个节点包含一个额外增加的随机指针 random ，该指针可以指向链表中的任何节点或空节点。构造这个链表的 深拷贝。
+```
+- 思路1：回溯+哈希表，用哈希表记录每一个节点对应新节点的创建情况。遍历到某个结点时，如果这两个节点中的任何一个节点的新节点没有被创建，我们都立刻递归地进行创建，如果已经拷贝过，我们可以直接从哈希表中取出拷贝后的节点的指针并返回即可。
+```cpp
+class Solution {
+public:
+    map<Node*, Node*> hs;
+    Node* copyRandomList(Node* head) {
+        if (!head) {return head;}
+        if (!hs.count(head)){
+            Node* headNew = new Node(head->val);
+            hs[head] = headNew;
+            headNew->next = copyRandomList(head->next);
+            headNew->random = copyRandomList(head->random);
+        }
+        return hs[head];
+    }
+};
+```
+
+- 思路2：思路1的空间复杂度为$O(n)$，而通过迭代+结点拆分，可以只使用$O(1)$的空间复杂度
+```cpp
+
+```
