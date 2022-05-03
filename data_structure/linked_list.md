@@ -410,7 +410,63 @@ public:
 };
 ```
 
-- 思路2：思路1的空间复杂度为$O(n)$，而通过迭代+结点拆分，可以只使用$O(1)$的空间复杂度
+- 思路2：思路1的空间复杂度为$O(n)$，而通过迭代+结点拆分（在每有链表的每一个个节点后面复制一个结点，然后再将复制的节点均拆出来连在一起），可以只使用$O(1)$的空间复杂度
 ```cpp
-
+class Solution {
+public:
+    Node* copyRandomList(Node* head) {
+        if (!head) {return head;}
+        for (Node* node = head; node != nullptr; node = node->next->next){
+            Node* nodenew = new Node(node->val);
+            nodenew->next = node->next;
+            node->next = nodenew;
+        }
+        for (Node* node = head; node != nullptr; node = node->next->next){
+            Node* nodenew = node->next;
+            nodenew->random = (node->random) ? node->random->next : nullptr;
+        }
+        Node* headnew = head->next;
+        for (Node* node = head; node != nullptr; node = node->next){
+            Node* nodenew = node->next;
+            node->next = node->next->next;
+            nodenew->next = (nodenew->next) ? nodenew->next->next : nullptr;
+        }
+        return headnew;
+    }
+};
 ```
+
+# 总结
+- null/nil异常处理
+- dummy node哑巴节点
+- 快慢指针
+- 插入节点到排序链表
+- 从链表中删除节点
+- 翻转链表
+- 合并链表
+- 找到链表的中间节点
+
+# 题目总结
+&#x2705;[删除排序链表中的重复元素1](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-list/)
+
+&#x2705;[删除排序链表中的重复元素2](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-list-ii/)
+
+&#x2705;[反转链表1](https://leetcode-cn.com/problems/reverse-linked-list/)
+
+&#x2705;[反转链表2](https://leetcode-cn.com/problems/reverse-linked-list-ii/)
+
+&#x2705;[合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists/)
+
+&#x2705;[分割链表](https://leetcode-cn.com/problems/partition-list/)
+
+&#x2705;[排序链表](https://leetcode-cn.com/problems/sort-list/)
+
+&#x2705;[重排链表](https://leetcode-cn.com/problems/reorder-list/)
+
+&#x2705;[环形链表1](https://leetcode-cn.com/problems/linked-list-cycle/)
+
+&#x2705;[环形链表2](https://leetcode-cn.com/problems/linked-list-cycle-ii/)
+
+&#x2705;[回文链表](https://leetcode-cn.com/problems/palindrome-linked-list/)
+
+&#x2705;[复制带随机指针的链表](https://leetcode-cn.com/problems/copy-list-with-random-pointer/)
