@@ -24,7 +24,7 @@ C++编码笔记
 ||bitset||存放标志位||
 ||valarry||进行高速向量运算||
 
-## 易错点
+## 涨姿势
 
 ### 1
 无论是vector.size()，还是string.size()等等，返回的都是unsigned int型（64位机器是unsigned __int64）。以下面代码为例：
@@ -35,3 +35,28 @@ for (int i = 0; i < a.size() - b.size() + 1; ++i) //not ok
 上述代码中，如果a.size()为3，b.size()为5，那么第二行的代码for循环中，右边的计算结果便是-1，然而.size()是无符号整型，它便会把-1转换成无符号整型，此时的终止条件就是“i < (unsigned __int64)(-1)”，即“i < 18446744073709551615”，循环便会出错。
 
 所以说，设计到.size()时，尽量不要使得表达式的值为负。
+
+### 2
+在C++11中，像vector这类的容器，都多了一个emplace_back()的函数。其功能与push_back()大致一样。不同的用法是，当容器中放入的是自定义的类，emplace_back()可以直接传入构造函数的参数，比如：
+```cpp
+class New {
+    int i;
+    string st;
+public:
+    New(int ii, string s):i(ii) , st(s) { }
+    ~New( ) { }
+};
+ 
+int main( ) {
+    vector<New> vec={ {21, "String"} , New{45 , "tinger"}};
+  // 注意：传入的是一个对象 New(**, **)
+    vec.push_back( New(34 , "Happy" ) ) ;        // Appending Test object
+    vec.push_back( 901 , "Doer" ) ;              // Error!!
+    vec.emplace_back( New(78 , "Gomu gomu" ) );  // workfine
+    vec.emplace_back( 41 , "Shanks" ) ;          // work fine
+}
+```
+性能比对：
+- 通过构造函数像容器内插入对象（例如上述代码），emplace_back()更高效；
+- 插入临时对象，二者相同，都调用移动构造函数；
+- 插入对象示例，二者相同，都调用拷贝构造函数；

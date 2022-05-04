@@ -115,6 +115,54 @@ public:
 };
 ```
 
+## [K个一组反转链表](https://leetcode-cn.com/problems/reverse-nodes-in-k-group/)
+```
+给你链表的头节点 head ，每 k 个节点一组进行翻转，请你返回修改后的链表。
+k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
+```
+- 思路：写一个反转整个链表的函数，输入为头尾结点，输出为新的头尾结点。遍历链表，每K个就将该K个链表断开，调用反转函数，再重连。
+
+```cpp
+class Solution {
+public:
+    pair<ListNode*, ListNode*> _reverse(ListNode* head, ListNode* tail){
+        ListNode* pre = nullptr;
+        ListNode* p = head;
+        while (pre != tail){
+            ListNode* nextnode = p->next;
+            p->next = pre;
+            pre = p;
+            p = nextnode;
+        }
+        return make_pair(tail, head);
+    }
+
+    ListNode* reverseKGroup(ListNode* head, int k) {
+        ListNode* dummy = new ListNode(-1, head);
+        ListNode* pre = dummy;
+        while (head){
+            ListNode* tail = pre;
+            for (int i = 0; i < k; ++i){
+                tail = tail->next;
+                if (!tail) {return dummy->next;}
+            }
+            ListNode* nexthead = tail->next;
+            pair<ListNode*, ListNode*> rst = _reverse(head, tail);
+            head = rst.first;
+            tail = rst.second;
+            pre->next = head;
+            tail->next = nexthead;
+            pre = tail;
+            head = nexthead;
+        }
+        return dummy->next;
+    }
+};
+```
+需要注意的是，
+- 由于头结点有变化，所以需要构造dummy结点。
+- 断开链表时，要记录这段链表的前一个结点和后一个结点，不然无法重连。
+
 ## [合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists/)
 ```
 将两个升序链表合并为一个新的 升序 链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。 
@@ -454,6 +502,8 @@ public:
 &#x2705;[反转链表1](https://leetcode-cn.com/problems/reverse-linked-list/)
 
 &#x2705;[反转链表2](https://leetcode-cn.com/problems/reverse-linked-list-ii/)
+
+&#x2705;[K个一组反转链表](https://leetcode-cn.com/problems/reverse-nodes-in-k-group/)
 
 &#x2705;[合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists/)
 
