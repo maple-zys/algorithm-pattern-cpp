@@ -233,7 +233,7 @@ public:
 };
 ```
 
-## [岛屿数量]()
+## [岛屿数量](https://leetcode-cn.com/problems/number-of-islands/)
 ```
 给你一个由 '1'（陆地）和 '0'（水）组成的的二维网格，请你计算网格中岛屿的数量。
 岛屿总是被水包围，并且每座岛屿只能由水平方向和/或竖直方向上相邻的陆地连接形成。
@@ -323,6 +323,75 @@ public:
 给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
 ```
 ![图2](../images/2.png)
+- 思路1：动态规划，维护两个数组，分别记录
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int n = height.size();
+        if (n < 3) {return 0;}
+        vector<int> leftmax(n), rightmax(n);
+        leftmax[0] = height[0];
+        rightmax[n - 1] = height[n - 1];
+        for (int i = 1; i < n; ++i){
+            leftmax[i] = max(leftmax[i - 1], height[i]);
+        }
+        for (int i = n - 2; i >= 0; --i){
+            rightmax[i] = max(rightmax[i + 1], height[i]);
+        }
+        int ans = 0;
+        for (int i = 0; i < n; ++i){
+            ans += (min(leftmax[i], rightmax[i]) - height[i]);
+        }
+        return ans;
+    }
+};
+```
+- 思路2：单调栈，遍历到下标i时，若比栈顶元素大，则将栈顶元素弹出，通过下标i，弹出的下标，新的栈顶元素，三者来计算当前这次循环可以放的雨水
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int n = height.size(), ans = 0;
+        if (n < 3) {return ans;}
+        stack<int> st;
+        for (int i = 0; i < n; ++i){
+            while (!st.empty() && height[i] > height[st.top()]){
+                int top = st.top();
+                st.pop();
+                if (st.empty()) {break;}
+                ans += (i - st.top() - 1) * (min(height[i], height[st.top()]) - height[top]);
+            }
+            st.push(i);
+        }
+        return ans;
+    }
+};
+```
+- 思路3：双指针
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int n = height.size(), ans = 0;
+        if (n < 3) {return ans;}
+        int left = 0, leftmax = 0, right = n - 1, rightmax = 0;
+        while (left < right){
+            leftmax = max(leftmax, height[left]);
+            rightmax = max(rightmax, height[right]);
+            if (leftmax < rightmax){
+                ans += leftmax - height[left++];
+            }else{
+                ans += rightmax - height[right--];
+            }
+        }
+        return ans;
+    }
+};
+```
 
 
 # Queue 队列
@@ -495,3 +564,129 @@ public:
 };
 ```
 
+# 单调队列
+单调栈的拓展，可以从数组头 pop 出旧元素，典型应用是以线性时间获得区间最大/最小值。
+## [滑动窗口最大值](https://leetcode-cn.com/problems/sliding-window-maximum/)
+```
+给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。
+返回 滑动窗口中的最大值 。
+```
+- 思路1：单调队列，降序
+```cpp
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        deque<int> q;
+        for (int i = 0; i < k; ++i){
+            while (!q.empty() && nums[i] > nums[q.back()]){
+                q.pop_back();
+            }
+            q.push_back(i);
+        }
+        vector<int> ans = {nums[q.front()]};
+        for (int i = k; i < nums.size(); ++i){
+            while (!q.empty() && nums[i] > nums[q.back()]){
+                q.pop_back();
+            }
+            q.push_back(i);
+            while (q.front() <= i - k){
+                q.pop_front();
+            }
+            ans.emplace_back(nums[q.front()]);
+        }
+        return ans;
+    }
+};
+```
+注意，在往ans中添加当前最大值时，需要判断一下该最大值是否还在窗口内
+
+- 思路2：优先队列（大顶堆）
+
+```cpp
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        priority_queue<pair<int, int>> q;
+        for (int i = 0; i < k; ++i){
+            q.emplace(nums[i], i);
+        }
+        vector<int> ans = {q.top().first};
+        for (int i = k; i < nums.size(); ++i){
+            q.emplace(nums[i], i);
+            while (q.top().second <= i - k){
+                q.pop();
+            }
+            ans.emplace_back(q.top().first);
+        }
+        return ans;
+    }
+};
+```
+
+## [和至少为K的最短子数组](https://leetcode-cn.com/problems/shortest-subarray-with-sum-at-least-k/)
+```
+给你一个整数数组 nums 和一个整数 k ，找出 nums 中和至少为 k 的 最短非空子数组 ，并返回该子数组的长度。如果不存在这样的 子数组 ，返回 -1 。
+```
+- 思路：采用前缀和的形式，来求出子数组的和。先求好每个位置的前缀和，然后采用单调队列（递增）。
+```cpp
+class Solution {
+public:
+    int shortestSubarray(vector<int>& nums, int k) {
+        deque<int> q;
+        int ans = INT_MAX, n = nums.size();
+        vector<long long> sum(n + 1);
+        sum[0] = 0;
+        for (int i = 1; i <= n; ++i){
+            sum[i] = sum[i - 1] + nums[i - 1];
+        }
+        for (int i = 0; i <= n; ++i){
+            while (!q.empty() && sum[i] <= sum[q.back()]){
+                q.pop_back();
+            }
+            while (!q.empty() && sum[i] - sum[q.front()] >= k){
+                ans = min(ans, i - q.front());
+                q.pop_front();
+            }
+            q.push_back(i);
+        }
+        return (ans == INT_MAX) ? -1: ans;
+    }
+};
+```
+
+# 总结
+- 熟悉栈的使用场景：
+  - 后入先出，保存临时支；
+  - 利用栈进行DFS深度搜索；
+  - 熟悉单调栈；
+- 熟悉队列的使用场景：
+  - 利用队列进行BFS广度搜索；
+  - 熟悉单调队列（一般采用双端队列，因为也需要从后端pop）；
+
+
+# 题目总结
+&#x2705;[最小栈](https://leetcode-cn.com/problems/min-stack/)
+
+&#x2705;[逆波兰表达式求值](https://leetcode-cn.com/problems/evaluate-reverse-polish-notation/)
+
+&#x2705;[字符串解码](https://leetcode-cn.com/problems/decode-string/)
+
+&#x2705;[二叉树的中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
+
+&#x2705;[克隆图](https://leetcode-cn.com/problems/clone-graph/)
+
+&#x2705;[岛屿数量](https://leetcode-cn.com/problems/number-of-islands/)
+
+&#x2705;[柱状图中最大的矩形](https://leetcode-cn.com/problems/largest-rectangle-in-histogram/)
+
+&#x2705;[接雨水](https://leetcode-cn.com/problems/trapping-rain-water/)
+
+&#x2705;[用栈实现队列](https://leetcode-cn.com/problems/implement-queue-using-stacks/)
+
+&#x2705;[二叉树的层序遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
+
+&#x2705;[01矩阵](https://leetcode-cn.com/problems/01-matrix/)
+
+&#x2705;[滑动窗口最大值](https://leetcode-cn.com/problems/sliding-window-maximum/)
+
+&#x2705;[和至少为K的最短子数组](https://leetcode-cn.com/problems/shortest-subarray-with-sum-at-least-k/)
