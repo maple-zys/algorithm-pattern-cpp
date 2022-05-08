@@ -60,3 +60,46 @@ int main( ) {
 - 通过构造函数像容器内插入对象（例如上述代码），emplace_back()更高效；
 - 插入临时对象，二者相同，都调用移动构造函数；
 - 插入对象示例，二者相同，都调用拷贝构造函数；
+
+priority_queue、stack等中的push和emplace也是这样。
+
+### 3
+优先队列（priority_queue）自定义实现比较函数
+1. struct重载运算符()
+    ```cpp
+    struct cmp{
+        bool operator()(vector<int>&a,vector<int>&b){
+            return a[0]>b[0]; 
+        }
+    };
+    priority_queue<vector<int>,vector<vector<int>>,cmp> q;//小顶堆
+    ```
+    这属于**传入函数对象**的方式。
+2. class重载运算符()
+    ```cpp
+    class cmp{
+    public:
+        bool operator()(vector<int>&a,vector<int>&b){
+            return a[0]>b[0]; 
+        }
+    };
+    priority_queue<vector<int>,vector<vector<int>>,cmp> q;//小顶堆
+    ```
+    这属于**传入函数对象**的方式。
+3. 定义函数
+    ```cpp
+    bool cmp(vector<int>&a,vector<int>&b){
+	return a[0]>b[0];
+    }
+    priority_queue<vector<int>,vector<vector<int>>,decltype(&cmp)> q(cmp);//小顶堆
+    ```
+    这是属于**传入函数指针**的方式。
+    注意，**如果是类成员函数，cmp函数需加static关键字**。
+4. lambda表达式
+    ```cpp
+    auto cmp=[](vector<int>&a,vector<int>&b)->bool{
+            return a[0]>b[0];
+        };
+    priority_queue<vector<int>,vector<vector<int>>,decltype(cmp)> q(cmp);//小顶堆
+    ```
+    这是属于**传入函数指针**的方式。
