@@ -174,7 +174,7 @@ public:
 };
 ```
 
-## [IPO](https://leetcode.cn/problems/ipo/)'
+## [IPO](https://leetcode.cn/problems/ipo/)
 ```
 假设 力扣（LeetCode）即将开始 IPO 。为了以更高的价格将股票卖给风险投资公司，力扣 希望在 IPO 之前开展一些项目以增加其资本。 由于资源有限，它只能在 IPO 之前完成最多 k 个不同的项目。帮助 力扣 设计完成最多 k 个不同项目后得到最大总资本的方式。
 给你 n 个项目。对于每个项目 i ，它都有一个纯利润 profits[i] ，和启动该项目需要的最小资本 capital[i] 。
@@ -239,7 +239,7 @@ public:
 };
 ```
 
-## []()
+## [重构字符串](https://leetcode.cn/problems/reorganize-string/)
 ```
 给定一个字符串 s ，检查是否能重新排布其中的字母，使得两相邻的字符不同。
 返回 s 的任意可能的重新排列。若不可行，返回空字符串 "" 。
@@ -285,5 +285,168 @@ public:
 - 思路：在Prim算法中，寻找最短边时采用堆
 
 ```cpp
+class Solution {
+public:
+    struct edge{
+        int to, w;
+    };
 
+    int dist_cal(vector<int>& p1, vector<int>& p2){
+        return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1]);
+    }
+
+    int minCostConnectPoints(vector<vector<int>>& points) {
+        int num_v = points.size();
+        if (num_v == 0) {return 0;}
+        int ans = 0;
+        vector<vector<edge>> edges(num_v);
+        for (int i = 0; i < num_v; ++i){
+            for (int j = i + 1; j < num_v; ++j){
+                edge e1 = {j, dist_cal(points[i], points[j])};
+                edges[i].emplace_back(e1);
+                edge e2 = {i, dist_cal(points[i], points[j])};
+                edges[j].emplace_back(e2);
+            }
+        }
+        vector<int> lowestdist(num_v, INT_MAX);
+        vector<bool> visited(num_v, false);
+        priority_queue < pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> q;
+        q.push(make_pair(0, 0));
+        while (!q.empty()){
+            int temp = q.top().first;
+            int p = q.top().second;
+            q.pop();
+            if (visited[p]) {continue;}
+            visited[p] = 1;
+            ans += temp;
+            for (int i = 0; i < edges[p].size(); ++i){
+                int to = edges[p][i].to;
+                lowestdist[to] = min(lowestdist[to], edges[p][i].w);
+                if (!visited[to]) { q.push(make_pair(lowestdist[to], to));}
+            }
+        }
+        return ans;
+    }
+};
 ```
+
+## [网络延迟时间](https://leetcode.cn/problems/network-delay-time/)
+Dijkstra算法的堆优化
+```
+有 n 个网络节点，标记为 1 到 n。
+给你一个列表 times，表示信号经过 有向 边的传递时间。 times[i] = (ui, vi, wi)，其中 ui 是源节点，vi 是目标节点， wi 是一个信号从源节点传递到目标节点的时间。
+现在，从某个节点 K 发出一个信号。需要多久才能使所有节点都收到信号？如果不能使所有节点收到信号，返回 -1 。
+```
+- 思路：在Dijkstra算法中，寻找最短边采用堆
+```cpp
+class Solution {
+public:
+    int networkDelayTime(vector<vector<int>>& times, int n, int k) {
+        vector<vector<pair<int, int>>> edges(n + 1);
+        for (int i = 0; i < times.size(); ++i){
+            edges[times[i][0]].emplace_back(make_pair(times[i][2], times[i][1]));
+        }
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> q;
+        vector<int> dist(n + 1, INT_MAX);
+        vector<bool> visited(n + 1, false);
+        q.push(make_pair(0, k));
+        dist[k] = 0;
+        while (!q.empty()){
+            int p = q.top().second;
+            q.pop();
+            if (visited[p]) {continue;}
+            visited[p] = true;
+            for (auto& e:edges[p]){
+                int to = e.second;
+                dist[to] = min(dist[to], dist[p] + e.first);
+                if (!visited[to]) {q.push(make_pair(dist[to], to));}
+            }
+        }
+        int ans = *max_element(dist.begin() + 1, dist.end());
+        return ans == INT_MAX ? -1 : ans;
+    }
+};
+```
+
+## [K站中转内最便宜的航班](https://leetcode.cn/problems/cheapest-flights-within-k-stops/)
+```
+有 n 个城市通过一些航班连接。给你一个数组 flights ，其中 flights[i] = [fromi, toi, pricei] ，表示该航班都从城市 fromi 开始，以价格 pricei 抵达 toi。
+现在给定所有的城市和航班，以及出发城市 src 和目的地 dst，你的任务是找到出一条最多经过 k 站中转的路线，使得从 src 到 dst 的 价格最便宜 ，并返回该价格。 如果不存在这样的路线，则输出 -1。
+```
+- 思路1：维护每个结点最短路径的边数，当遇到更小的路径时结点需要重新入堆
+```cpp
+class Solution {
+public:
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
+        vector<vector<pair<int, int>>> edges(n);
+        for (int i = 0; i < flights.size(); ++i) {
+            edges[flights[i][0]].emplace_back(make_pair(flights[i][2], flights[i][1]));
+        }
+        unordered_map<int, int> prices, steps;
+        auto cmp = [](const vector<int>& e1, const vector<int>& e2) {return e1[0] > e2[0]; };
+        priority_queue<vector<int>, vector<vector<int>>, decltype(cmp)> q(cmp);
+        q.push({ 0, 0, src });
+        while (!q.empty()) {
+            int price = q.top()[0], step = q.top()[1], node = q.top()[2];
+            q.pop();
+            if (node == dst) { return price; }
+            if (prices.find(node) == prices.end()) { prices[node] = price; }
+            steps[node] = step;
+            if (step <= k) {
+                ++step;
+                for (auto& e : edges[node]) {
+                    int nn = e.second, pp = e.first;
+                    if ((prices.find(nn) == prices.end()) || step < steps[nn]) {
+                        q.push({ pp + price, step, nn });
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+};
+```
+- 思路2：动态规划，转移方程为$f[t][i]=\min _{(j, i) \in \text { flights }}\{f[t-1][j]+\operatorname{cost}(j, i)\}$，由于状态t只与状态t-1有关，所以可以采用两个一维数组进行空间优化
+```cpp
+class Solution {
+public:
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) { 
+        vector<int> f(n, 101 * 10000 + 1);
+        f[src] = 0;
+        vector<int> new_f(n, 101 * 10000 + 1);
+        for (int t = 1; t <= k + 1; ++t){
+            for (auto&& flight : flights){
+                int j = flight[0], i = flight[1], cost = flight[2];
+                new_f[i] = min(new_f[i], f[j] + cost);
+            }
+            f = new_f;
+        }
+        int ans = 101 * 10000 + 1;
+        for (int t = 1; t <= k + 1; ++t){
+            ans = min(ans, f[dst]);
+        }
+        return ans == 101 * 10000 + 1 ? -1 : ans;
+    }
+};
+```
+
+# 题目总结
+&#x2705;[数据流中的第K大元素](https://leetcode-cn.com/problems/kth-largest-element-in-a-stream/)
+
+&#x2705;[有序矩阵中第K小的元素](https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/)
+
+&#x2705;[查找和最小的K对数字](https://leetcode-cn.com/problems/find-k-pairs-with-smallest-sums/)
+
+&#x2705;[最大的团队表现值](https://leetcode-cn.com/problems/maximum-performance-of-a-team/)
+
+&#x2705;[IPO](https://leetcode.cn/problems/ipo/)
+
+&#x2705;[会议室2](https://leetcode.cn/problems/meeting-rooms-ii/)
+
+&#x2705;[重构字符串](https://leetcode.cn/problems/reorganize-string/)
+
+&#x2705;[连接所有点的最小费用](https://leetcode.cn/problems/min-cost-to-connect-all-points/)
+
+&#x2705;[网络延迟时间](https://leetcode.cn/problems/network-delay-time/)
+
+&#x2705;[K站中转内最便宜的航班](https://leetcode.cn/problems/cheapest-flights-within-k-stops/)
