@@ -103,3 +103,13 @@ priority_queue、stack等中的push和emplace也是这样。
     priority_queue<vector<int>,vector<vector<int>>,decltype(cmp)> q(cmp);//小顶堆
     ```
     这是属于**传入函数指针**的方式。
+
+### 4
+max_element和min_element两个函数，用于返回容器或数组的最大值或最小值的迭代器。若要返回值，可采用*max_element和\*min_element，例如：
+```cpp
+vector<int> arr_1 = { 1, 34, 43, 2, 3463 };
+int arr_2[5] = {1, 34, 43, 2, 3463};
+cout << *max_element(arr_1.begin(), arr_1.end()) << endl;
+cout << *max_element(arr_2, arr_2 + 5) << endl;;
+```
+上述代码，cout的两个数均为3463。
