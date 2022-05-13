@@ -11,3 +11,4 @@
 - [栈和队列](./data_structure/stack_queue.md)
 - [优先级队列（堆）](./data_structure/heap.md)
 - [并查集](./data_structure/union_find.md)
+- [二进制](data_structure/binary_op.md)
