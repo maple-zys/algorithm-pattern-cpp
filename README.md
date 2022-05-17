@@ -12,3 +12,6 @@
 - [优先级队列（堆）](./data_structure/heap.md)
 - [并查集](./data_structure/union_find.md)
 - [二进制](data_structure/binary_op.md)
+
+## 基础算法篇
+- [二分搜索]()

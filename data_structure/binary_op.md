@@ -148,3 +148,73 @@ public:
     }
 };
 ```
+
+## [颠倒二进制位](https://leetcode.cn/problems/reverse-bits/)
+```
+颠倒给定的 32 位无符号整数的二进制位。
+```
+- 思路1：循环，n右移
+```cpp
+class Solution {
+public:
+    uint32_t reverseBits(uint32_t n) {
+        uint32_t res = 0;
+        for (int i = 0; i < 32; ++i){
+            res = (res << 1) | (n & 1);
+            n >>= 1;
+        }
+        return res;
+    }
+};
+```
+- 思路2：分治
+```cpp
+class Solution {  
+private:
+    const uint32_t M1 = 0x55555555; // 01010101010101010101010101010101
+    const uint32_t M2 = 0x33333333; // 00110011001100110011001100110011
+    const uint32_t M4 = 0x0f0f0f0f; // 00001111000011110000111100001111
+    const uint32_t M8 = 0x00ff00ff; // 00000000111111110000000011111111
+
+public:
+    uint32_t reverseBits(uint32_t n) {
+        n = n >> 1 & M1 | (n & M1) << 1;
+        n = n >> 2 & M2 | (n & M2) << 2;
+        n = n >> 4 & M4 | (n & M4) << 4;
+        n = n >> 8 & M8 | (n & M8) << 8;
+        return n << 16 | n >> 16;
+    }
+};
+```
+
+## [数字范围按位与](https://leetcode.cn/problems/bitwise-and-of-numbers-range/)
+```
+给你两个整数 left 和 right ，表示区间 [left, right] ，返回此区间内所有数字 按位与 的结果（包含 left 、right 端点）。
+```
+- 思路：直接循环是不可取的，会TLE，这里每次将right的最后一个1置0，当right比left小时，right的左边一部分便是这些数的公共前缀，右边一部分是0，即是所求。
+```cpp
+class Solution {
+public:
+    int rangeBitwiseAnd(int left, int right) {
+        while (left < right){
+            right &= (right - 1);
+        }
+        return right;
+    }
+};
+```
+
+# 题目总结
+&#x2705;[只出现一次的数字1](https://leetcode.cn/problems/single-number/)
+
+&#x2705;[只出现一次的数字2](https://leetcode.cn/problems/single-number-ii/)
+
+&#x2705;[只出现一次的数字3](https://leetcode.cn/problems/single-number-iii/)
+
+&#x2705;[位1的个数](https://leetcode.cn/problems/number-of-1-bits/)
+
+&#x2705;[比特位计数](https://leetcode.cn/problems/counting-bits/)
+
+&#x2705;[颠倒二进制位](https://leetcode.cn/problems/reverse-bits/)
+
+&#x2705;[数字范围按位与](https://leetcode.cn/problems/bitwise-and-of-numbers-range/)

@@ -100,7 +100,7 @@ public:
 };
 ```
 
-## [后续遍历](https://leetcode-cn.com/problems/binary-tree-postorder-traversal/)
+## [后序遍历](https://leetcode-cn.com/problems/binary-tree-postorder-traversal/)
 递归：
 ```cpp
 class Solution {
@@ -410,6 +410,40 @@ public:
 };
 ```
 
+## [二叉搜索树与双向链表](https://leetcode.cn/problems/er-cha-sou-suo-shu-yu-shuang-xiang-lian-biao-lcof/)
+```
+输入一棵二叉搜索树，将该二叉搜索树转换成一个排序的循环双向链表。要求不能创建任何新的节点，只能调整树中节点指针的指向。
+```
+```cpp
+class Solution {
+private:
+    Node* pre, *head;
+
+public:
+    void dfs(Node* cur){
+        if (!cur) {return;}
+        dfs(cur->left);
+        if (pre)
+        {
+            pre->right = cur;
+        }else{
+            head = cur;
+        }
+        cur->left = pre;
+        pre = cur;
+        dfs(cur->right);
+    }
+
+    Node* treeToDoublyList(Node* root) {
+        if (!root) return nullptr;
+        dfs(root);
+        head->left = pre;
+        pre->right = head;
+        return head;
+    }
+};
+```
+
 # 总结
 - 掌握二叉树前、中、后序遍历的递归和非递归，以及层序遍历；
 - 熟悉二叉树DFS应用和其中的分治思想
@@ -421,7 +455,7 @@ public:
 
 &#x2705;[中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
 
-&#x2705;[后续遍历](https://leetcode-cn.com/problems/binary-tree-postorder-traversal/)
+&#x2705;[后序遍历](https://leetcode-cn.com/problems/binary-tree-postorder-traversal/)
 
 &#x2705;[层序遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
 
