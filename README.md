@@ -11,7 +11,9 @@
 - [栈和队列](./data_structure/stack_queue.md)
 - [优先级队列（堆）](./data_structure/heap.md)
 - [并查集](./data_structure/union_find.md)
-- [二进制](data_structure/binary_op.md)
+- [二进制](./data_structure/binary_op.md)
 
 ## 基础算法篇
-- [二分搜索]()
+- [二分搜索](./basic_algorithm/binary_search.md)
+- [排序算法](./basic_algorithm/sort.md)
+- [动态规划](./basic_algorithm/dp.md)
