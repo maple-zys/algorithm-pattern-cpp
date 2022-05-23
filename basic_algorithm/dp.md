@@ -204,6 +204,7 @@ public:
 ```
 
 ## Sequence(40%)
+这一类的一部分题目中，初始化时需要n+1的dp数组。
 ### [爬楼梯](https://leetcode.cn/problems/climbing-stairs/)
 ```
 假设你正在爬楼梯。需要 n 阶你才能到达楼顶。
@@ -292,4 +293,237 @@ public:
         return step;
     }
 };
+```
+
+### [分割回文串2](https://leetcode.cn/problems/palindrome-partitioning-ii/)
+```
+给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是回文。
+返回符合要求的 最少分割次数 。
+```
+- 思路：两次DP。第一次DP先求出任意子串`s[i...j]`是否为回文串。第二次DP的转移方程为：当`s[0...i]`是回文串时，`f[i] = 0`，若不是，则$f[i]=\min _{0 \leq j<i}\{f[j]\}+1\}$，其中`s[j+1...i]`是回文串。
+```cpp
+class Solution {
+public:
+    int minCut(string s) {
+        int n = s.size();
+        vector<vector<int>> g(n, vector<int>(n, true));
+        for (int i = n - 1; i >= 0; --i){
+            for (int j = i + 1; j < n; ++j){
+                g[i][j] = (s[i] == s[j]) && g[i + 1][j - 1];
+            }
+        }
+        vector<int> f(n, INT_MAX);
+        for (int i = 0; i < n; ++i){
+            if (g[0][i]){
+                f[i] = 0;
+            }else{
+                for (int j = 0; j < i; ++j){
+                    if (g[j + 1][i]){
+                        f[i] = min(f[i], f[j] + 1);
+                    }
+                }
+            }
+        }
+        return f[n - 1];
+    }
+};
+```
+
+### [分割回文串3](https://leetcode.cn/problems/palindrome-partitioning-iii/)
+```
+给你一个由小写字母组成的字符串 s，和一个整数 k。
+请你按下面的要求分割字符串：
+首先，你可以将 s 中的部分字符修改为其他的小写英文字母。
+接着，你需要把 s 分割成 k 个非空且不相交的子串，并且每个子串都是回文串。
+请返回以这种方式分割字符串所需修改的最少字符数。
+```
+- 思路1：转移方程为：$f[i][j] = min(f[pos][j - 1] + cost(S, i0 + 1, i))$，其中pos为从j-1开始枚举的第j个回文字符串的左边界。时间复杂度：$O(N^3K)$，空间复杂度：$O(NK)$。
+```cpp
+class Solution {
+public:
+    int cost(string& s, int left, int right){
+        int ret = 0;
+        for (int i = left, j = right; i < j; ++i, --j){
+            if (s[i] != s[j]){
+                ++ret;
+            }
+        }
+        return ret;
+    }
+
+    int palindromePartition(string s, int k) {
+        int n = s.size();
+        vector<vector<int>> f(n + 1, vector<int> (k + 1, INT_MAX));
+        f[0][0] = 0;
+        for (int i = 1; i <= n; ++i){
+            for (int j = 1; j <= min(k, i); ++j){
+                if (j == 1){
+                    f[i][j] = cost(s, 0, i - 1);
+                }else{
+                    for (int pos = j - 1; pos < i; ++pos){
+                        f[i][j] = min(f[i][j], f[pos][j - 1] + cost(s, pos, i - 1));
+                    }
+                }
+            }
+        }
+        return f[n][k];
+    }
+};
+```
+- 思路2：上述代码中的cost函数其实也可以提前采用DP将每一个`cost[i, j]`求出来。这样的话，时间复杂度即为$O(N^2K)$，空间复杂度为$O(N^2 + NK)$。
+```cpp
+class Solution {
+public:
+    int palindromePartition(string s, int k) {
+        int n = s.size();
+
+        vector<vector<int>> cost(n, vector<int> (n));
+        for (int span = 2; span <= n; ++span){
+            for (int i = 0; i <= n - span; ++i){
+                int j = i + span - 1;
+                cost[i][j] = cost[i + 1][j - 1] + (s[i] == s[j] ? 0 : 1);
+            }
+        }
+
+        vector<vector<int>> f(n + 1, vector<int> (k + 1, INT_MAX));
+        f[0][0] = 0;
+        for (int i = 1; i <= n; ++i){
+            for (int j = 1; j <= min(k, i); ++j){
+                if (j == 1){
+                    f[i][j] = cost[0][i - 1];
+                }else{
+                    for (int pos = j - 1; pos < i; ++pos){
+                        f[i][j] = min(f[i][j], f[pos][j - 1] + cost[pos][i - 1]);
+                    }
+                }
+            }
+        }
+        return f[n][k];
+    }
+};
+```
+
+### [最长递增子序列](https://leetcode.cn/problems/longest-increasing-subsequence/)
+```
+给你一个整数数组 nums ，找到其中最长严格递增子序列的长度。
+```
+- 思路1：动态规划，时间复杂度：$O(N^2)$，空间复杂度：$O(N)$。转移方程为：$d p[i]=\max (d p[j])+1$, 其中 $0 \leq j<i$ 且 $n u m[j]<n u m[i]$
+```cpp
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int n = nums.size();
+        int ans = 1;
+        vector<int> dp(n, 1);
+        for (int i = 1; i < n; ++i){
+            for (int j = 0; j < i; ++j){
+                if (nums[i] > nums[j]){
+                    dp[i] = max(dp[i], dp[j] + 1);
+                }
+            }
+            ans = max(dp[i], ans);
+        }
+        return ans;
+    }
+};
+```
+- 思路2：贪心+二分查找，时间复杂度：$O(NlogN)$，空间复杂度：$O(N)$。维护`d[i]`为，长度为i的严格递增子序列的最后一个元素最小可能为多少。从前往后遍历数组`nums`时，如果nums $[i]>d[$ len $]$，则直接加入数组d的末尾，最长严格递增子序列长度加1；否则在数组d中寻找第一个比`nums[i]`小的数字`d[k]`，并更新$d[k+1]=n u m s[i]$。
+```cpp
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int n = nums.size(), ans = 1;
+        if (n == 0){
+            return 0;
+        }
+        vector<int> d(n + 1, 0);
+        d[ans] = nums[0];
+        for (int i = 0; i < n; ++i){
+            if (nums[i] > d[ans]){
+                d[++ans] = nums[i];
+            }else{
+                int left = 1, right = ans; // 二分搜索
+                while (left < right){
+                    int mid = left + ((right - left) >> 1);
+                    if (d[mid] < nums[i]){
+                        left = mid + 1;
+                    }else{
+                        right = mid;
+                    }
+                }
+                d[left] = nums[i];
+                // 上述的二分搜索可以采用C++中二分查找内置函数
+                // int pos = lower_bound(d.begin() + 1, d.begin() + ans + 1, nums[i]) - d.begin();
+                // d[pos] = nums[i];
+            }
+        }
+        return ans;
+    }
+};
+```
+
+### [单词拆分](https://leetcode.cn/problems/word-break/)
+```
+给你一个字符串 s 和一个字符串列表 wordDict 作为字典。请你判断是否可以利用字典中出现的单词拼接出 s 。
+注意：不要求字典中出现的单词全部都使用，并且字典中的单词可以重复使用。
+```
+- 思路：转移方程为：$d p[i]=d p[j] \& \& \operatorname{check}(s[j . . i-1])$，其中的check表示字符串`s[j...i - 1]`是否出现在字典中。并且如果分割点j到i的距离大于了字典中最长的单词的长度，则直接停止枚举（剪枝）。
+```cpp
+class Solution {
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        unordered_set<string> hs;
+        int max_len = 1;
+        for (auto word : wordDict){
+            hs.insert(word);
+            max_len = max((int)word.size(), max_len);
+        }
+        int n = s.size();
+        vector<bool> dp(n + 1);
+        dp[0] = true;
+        for (int i = 1; i <= n; ++i){
+            for (int j = i; j >= max(0, i - max_len); --j){
+                if (dp[j] && hs.find(s.substr(j, i - j)) != hs.end()){
+                    dp[i] = true;
+                    break;
+                }
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+## Two Sequences(40%)
+
+### [最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/)
+```
+给定两个字符串 text1 和 text2，返回这两个字符串的最长 公共子序列 的长度。如果不存在 公共子序列 ，返回 0 。
+一个字符串的 子序列 是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。
+例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。
+```
+- 思路1：转移方程为：$d p[i][j]= \begin{cases}d p[i-1][j-1]+1, & \text { text }[i-1]=\operatorname{text}_{2}[j-1] \\ \max (d p[i-1][j], d p[i][j-1]), & \text { text }_{1}[i-1] \neq \operatorname{text}_{2}[j-1]\end{cases}$
+```cpp
+class Solution {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        if (text1.size() == 0 or text2.size() == 0) {return 0;}
+        int n1 = text1.size(), n2 = text2.size();
+        vector<vector<int>> dp(n1 + 1, vector<int> (n2 + 1));
+        for (int i = 1; i <= n1; ++i){
+            for (int j = 1; j <= n2; ++j){
+                if (text1[i - 1] == text2[j - 1]){
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                }else{
+                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+                }
+            }
+        }
+        return dp[n1][n2];
+    }
+};
+```
+- 思路2：空间优化版本
+```cpp
+
 ```

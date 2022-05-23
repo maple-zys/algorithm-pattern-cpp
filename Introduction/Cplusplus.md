@@ -113,3 +113,15 @@ cout << *max_element(arr_1.begin(), arr_1.end()) << endl;
 cout << *max_element(arr_2, arr_2 + 5) << endl;;
 ```
 上述代码，cout的两个数均为3463。
+
+### 5
+C++自带的二分查找函数（使用时数组需要是升序的）：
+- lower_bound(begin, end, num)：在begin和end中的前闭后开区间，进行二分查找。返回从begin开始的**第一个大于或等于val的元素**的地址。如果所有元素都小于val，则返回end的地址。例如下面代码：
+```cpp
+    vector<int> arr = {1, 3, 5, 7, 9, 11};
+    cout << *lower_bound(arr.begin(), arr.end(), 6) << endl;
+    cout << lower_bound(arr.begin(), arr.end(), 6) - arr.begin() << endl;
+```
+第一个cout输出的是第一个大于或等于val的元素的值（7），第二个是其下标（3）。
+- upper_bound(begin, end, num)：在begin和end中的前闭后开区间，进行二分查找。返回从begin开始的**第一个大于val的元素**的地址。如果所有元素都小于val，则返回end的地址。与lower_bound相同。
+- binary_search(begin, end, value)：在begin和end中的前闭后开区间，进行二分查找。返回是否含有value，若有则为true，否则为false。
