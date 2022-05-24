@@ -525,5 +525,224 @@ public:
 ```
 - 思路2：空间优化版本
 ```cpp
+class Solution {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        if (text1.size() == 0 or text2.size() == 0) {return 0;}
+        if (text1.size() < text2.size()) {swap(text1, text2);} // 这句可有可无
+        int n1 = text1.size(), n2 = text2.size();
+        vector<int> dp(n2 + 1), temp(n2 + 1);
+        for (int i = 1; i <= n1; ++i){
+            for (int j = 1; j <= n2; ++j){
+                if (text1[i - 1] == text2[j - 1]){
+                    temp[j] = dp[j - 1] + 1;
+                }else{
+                    temp[j] = max(dp[j], temp[j - 1]);
+                }
+            }
+            dp = temp;
+        }
+        return dp[n2];
+    }
+};
+```
 
+### [编辑距离](https://leetcode.cn/problems/edit-distance/)
+```
+给你两个单词 word1 和 word2， 请返回将 word1 转换成 word2 所使用的最少操作数  。
+你可以对一个单词进行如下三种操作：
+插入一个字符
+删除一个字符
+替换一个字符
+```
+- 思路：转移方程，当word1的下标i和word2的下标j的字符不同时，$dp[i][j]=1+\min (dp[i][j-1], dp[i-1][j], dp[i-1][j-1])$；相同时，$dp[i][j] =1+\min (dp[i][j-1], dp[i-1][j], dp[i-1][j-1]-1)$。需要注意的是，相同的时候，`dp[i][j]`并不是直接相等于`dp[i - 1][j - 1]`，也是有可能从`dp[i][j - 1]`或`dp[i - 1][j]`转移而来的。
+```cpp
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        int n1 = word1.size(), n2 = word2.size();
+        vector<vector<int>> dp(n1 + 1, vector<int> (n2 + 1));
+        for (int i = 1; i <= n1; ++i){
+            dp[i][0] = i;
+        }
+        for (int i = 1; i <= n2; ++i){
+            dp[0][i] = i;
+        }
+        for (int i = 1; i <= n1; ++i){
+            for (int j = 1; j <= n2; ++j){
+                if (word1[i - 1] == word2[j - 1]){
+                    dp[i][j] = 1 + min(min(dp[i - 1][j - 1] - 1, dp[i][j - 1]), dp[i - 1][j]);
+                }else{
+                    dp[i][j] = 1 + min(min(dp[i - 1][j - 1], dp[i][j - 1]), dp[i - 1][j]);
+                }
+            }
+        }
+        return dp[n1][n2];
+    }
+};
+```
+- 思路2：空间优化版本
+```cpp
+class Solution {
+public:
+    int minDistance(string word1, string word2) {、
+        if (word1.size() < word2.size()) {swap(word1, word2);}
+        int n1 = word1.size(), n2 = word2.size();
+        vector<int> dp(n2 + 1), temp(n2 + 1);
+        for (int i = 1; i <= n2; ++i){
+            dp[i] = i;
+        }
+        for (int i = 1; i <= n1; ++i){
+            temp[0] = i;
+            for (int j = 1; j <= n2; ++j){
+                if (word1[i - 1] == word2[j - 1]){
+                    temp[j] = 1 + min(min(dp[j - 1] - 1, temp[j - 1]), dp[j]);
+                }else{
+                    temp[j] = 1 + min(min(dp[j - 1], temp[j - 1]), dp[j]);
+                }
+            }
+            dp = temp;
+        }
+        return dp[n2];
+    }
+};
+```
+
+### [交错字符串](https://leetcode.cn/problems/interleaving-string/)
+```
+给定三个字符串 s1、s2、s3，请你帮忙验证 s3 是否是由 s1 和 s2 交错 组成的。
+两个字符串 s 和 t 交错 的定义与过程如下，其中每个字符串都会被分割成若干 非空 子字符串：
+s = s1 + s2 + ... + sn
+t = t1 + t2 + ... + tm
+|n - m| <= 1
+交错 是 s1 + t1 + s2 + t2 + s3 + t3 + ... 或者 t1 + s1 + t2 + s2 + t3 + s3 + ...
+注意：a + b 意味着字符串 a 和 b 连接。
+```
+- 思路1：转移方程为：$f(i, j)=\left[f(i-1, j)\right.$ and $\left.s_{1}(i-1)=s_{3}(p)\right]$ or $\left[f(i, j-1)\right.$ and $\left.s_{2}(j-1)=s_{3}(p)\right]$，其中$p = i + j - 1$，是s3中的下标
+```cpp
+class Solution {
+public:
+    bool isInterleave(string s1, string s2, string s3) {
+        int n1 = s1.size(), n2 = s2.size(), n3 = s3.size();
+        if (n1 + n2 != n3) {return false;}
+        vector<vector<int>> dp(n1 + 1, vector<int> (n2 + 1, false));
+        dp[0][0] = true;
+        for (int i = 0; i <= n1; ++i){
+            for (int j = 0; j <= n2; ++j){
+                int pos = i + j - 1;
+                if (i){
+                    dp[i][j] |= (dp[i - 1][j] && s1[i - 1] == s3[pos]);
+                }
+                if (j){
+                    dp[i][j] |= (dp[i][j - 1] && s2[j - 1] == s3[pos]);
+                }
+            }
+        }
+        return dp[n1][n2];
+    }
+};
+```
+- 思路2：空间优化版本
+```cpp
+class Solution {
+public:
+    bool isInterleave(string s1, string s2, string s3) {
+        int n1 = s1.size(), n2 = s2.size(), n3 = s3.size();
+        if (n1 + n2 != n3) {return false;}
+        vector<int> dp(n2 + 1);
+        dp[0] = 1;
+        for (int i = 0; i <= n1; ++i){
+            for (int j = 0; j <= n2; ++j){
+                int pos = i + j - 1;
+                if (i){
+                    dp[j] &= (s1[i - 1] == s3[pos]);
+                }
+                if (j){
+                    dp[j] |= (dp[j - 1] && s2[j - 1] == s3[pos]);
+                }
+            }
+        }
+        return dp[n2];
+    }
+};
+```
+
+### [不同的子序列](https://leetcode.cn/problems/distinct-subsequences/)
+```
+给定一个字符串 s 和一个字符串 t ，计算在 s 的子序列中 t 出现的个数。
+字符串的一个 子序列 是指，通过删除一些（也可以不删除）字符且不干扰剩余字符相对位置所组成的新字符串。（例如，"ACE" 是 "ABCDE" 的一个子序列，而 "AEC" 不是）
+```
+- 思路：转移方程为：$d p[i][j]= \begin{cases}d p[i-1][j-1]+d p[i-1][j], & s[i - 1]=t[j - 1] \\ d p[i-1][j], & s[i - 1] \neq t[j - 1]\end{cases}$。
+```cpp
+class Solution {
+public:
+    using ull = unsigned long long;
+    int numDistinct(string s, string t) {
+        int n1 = s.size(), n2 = t.size();
+        if (n1 < n2) {return 0;}
+        vector<vector<ull>> dp(n1 + 1, vector<ull> (n2 + 1));
+        for (int i = 0; i <= n1; ++i){
+            dp[i][0] = 1;
+        }
+        for (int i = 1; i <= n1; ++i){
+            for (int j = 1; j <= n2; ++j){
+                if (s[i - 1] == t[j - 1]){
+                    dp[i][j] = dp[i - 1][j - 1] + dp[i - 1][j];
+                }else{
+                    dp[i][j] = dp[i - 1][j];
+                }
+            }
+        }
+        return dp[n1][n2];
+    }
+};
+```
+- 思路2：空间优化版本，需要注意的是，第二层的j循环需要倒序。因为计算j的时候要用到旧的j-1的信息，所以要先更新j，再更新j-1。
+```cpp
+class Solution {
+public:
+    using ull = unsigned long long;
+    int numDistinct(string s, string t) {
+        int n1 = s.size(), n2 = t.size();
+        if (n1 < n2) {return 0;}
+        vector<ull> dp(n2 + 1);
+        dp[0] = 1;
+        for (int i = 1; i <= n1; ++i){
+            dp[0] = 1;
+            for (int j = n2; j >= 1; --j){
+                if (s[i - 1] == t[j - 1]){
+                    dp[j] += dp[j - 1];
+                }
+            }
+        }
+        return dp[n2];
+    }
+};
+```
+
+## Backpack(10%)
+
+### [零钱兑换](https://leetcode.cn/problems/coin-change/)
+```
+给你一个整数数组 coins ，表示不同面额的硬币；以及一个整数 amount ，表示总金额。
+计算并返回可以凑成总金额所需的 最少的硬币个数 。如果没有任何一种硬币组合能组成总金额，返回 -1 。
+你可以认为每种硬币的数量是无限的。
+```
+- 思路：i代表钱数，j代表数组中的硬币。转移方程：$dp[i]=\min _{j=0 . . n-1} dp\left[i-c_{j}\right]+1$
+```cpp
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        vector<int> dp(amount + 1, INT_MAX - 1);
+        dp[0] = 0;
+        for (int i = 1; i <= amount; ++i){
+            for (int j = 0; j < coins.size(); ++j){
+                if (i - coins[j] >= 0){
+                    dp[i] = min(dp[i], dp[i - coins[j]] + 1);
+                }
+            }
+        }
+        return dp[amount] == INT_MAX - 1 ? -1 : dp[amount];
+    }
+};
 ```
