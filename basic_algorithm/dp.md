@@ -746,3 +746,319 @@ public:
     }
 };
 ```
+
+### [零钱兑换2](https://leetcode.cn/problems/coin-change-2/)
+```
+给你一个整数数组 coins 表示不同面额的硬币，另给一个整数 amount 表示总金额。
+请你计算并返回可以凑成总金额的硬币组合数。如果任何硬币组合都无法凑出总金额，返回 0 。
+假设每一种面额的硬币有无限个。
+```
+- 思路1：假定`dp[i][j]`代表前i种硬币组成金额j的种类，那么，当不适用第i种硬币时，$dp[i][j] += dp[i-1][j]$，当使用时，$dp[i][j] += \sum_{k=1}^{\lfloor j / v a l\rfloor} dp[i-1][j-k * v a l], \text { val }=coin s[i-1]$
+```cpp
+class Solution {
+public:
+    int change(int amount, vector<int>& coins) {
+        int n = coins.size();
+        vector<vector<int>> dp(n + 1, vector<int> (amount + 1));
+        dp[0][0] = 1;
+        for (int i = 1; i <= n; ++i){
+            int value = coins[i - 1];
+            for (int j = 0; j <= amount; ++j){
+                dp[i][j] = dp[i - 1][j];
+                for (int k = 1; k * value <= j; k++){
+                    dp[i][j] += dp[i - 1][j - k * value];
+                }
+            }
+        }
+        return dp[n][amount];
+    }
+};
+```
+- 思路2：空间优化版本
+```cpp
+class Solution {
+public:
+    int change(int amount, vector<int>& coins) {
+        vector<int> dp(amount + 1);
+        dp[0] = 1;
+        for (auto c : coins){
+            for (int j = c; j <= amount; ++j){
+                dp[j] += dp[j - c];
+            }
+        }
+        return dp[amount];
+    }
+};
+```
+
+
+### [背包问题](https://www.lintcode.com/problem/92/description)
+```
+在 n 个物品中挑选若干物品装入背包，最多能装多满？假设背包的大小为m，每个物品的大小为Ai
+（每个物品只能选择一次且物品大小均为正整数）
+```
+- 思路1：转移方程：i为第i个物品，j为背包大小。当$a[i-1]>j$时，肯定放不下，此时$dp[i][j] = dp[i-1][j]$；否则，可以选择放与不放两种情况，$dp[i][j] = max(dp[i-1][j], dp[i-1][j-a[i-1]] + a[i-1]$。
+```cpp
+class Solution {
+public:
+    int backPack(int m, vector<int> &a) {
+        int n = a.size();
+        vector<vector<int>> dp(n + 1, vector<int> (m + 1));
+        for (int i = 1; i <= n; ++i){
+            for (int j = 1; j <= m; ++j){
+                if (a[i - 1] > j){
+                    dp[i][j] = dp[i - 1][j];
+                }else{
+                    dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - a[i - 1]] + a[i - 1]);
+                }
+            }
+        }
+        return dp[n][m];
+    }
+};
+```
+- 思路2：空间优化版本，注意倒序。
+```cpp
+class Solution {
+public:
+    int backPack(int m, vector<int> &a) {
+        int n = a.size();
+        vector<int> dp(m + 1);
+        for (int i = 0; i < n; ++i){
+            for (int j = m; j >= 1; --j){
+                if (a[i] <= j){
+                    dp[j] = max(dp[j], dp[j - a[i]] + a[i]);
+                }
+            }
+        }
+        return dp[m];
+    }
+};
+```
+
+### [背包问题2](https://www.lintcode.com/problem/125/description)
+```
+有 n 个物品和一个大小为 m 的背包. 给定数组 A 表示每个物品的大小和数组 V 表示每个物品的价值.
+问最多能装入背包的总价值是多大?
+```
+- 思路1：和上题一样。
+```cpp
+class Solution {
+public:
+    int backPackII(int m, vector<int> &a, vector<int> &v) {
+        int n = a.size();
+        vector<vector<int>> dp(n + 1, vector<int> (m + 1));
+        for (int i = 1; i <= n; ++i){
+            for (int j = 1; j <= m; ++j){
+                dp[i][j] = max(dp[i - 1][j], a[i - 1] > j ? 0 : dp[i - 1][j - a[i - 1]] + v[i - 1]);
+            }
+        }
+        return dp[n][m];
+    }
+};
+```
+- 思路2：空间优化，注意倒序。
+```cpp
+class Solution {
+public:
+    int backPackII(int m, vector<int> &a, vector<int> &v) {
+        vector<int> dp(m + 1);
+        for (int i = 0; i < a.size(); ++i){
+            for (int j = m; j >= 1; --j){
+                dp[j] = a[i] > j ? dp[j] : max(dp[j], dp[j - a[i]] + v[i]);
+            }
+        }
+        return dp[m];
+    }
+};
+```
+
+### [分割等和子集](https://leetcode.cn/problems/partition-equal-subset-sum/)
+```
+给你一个 只包含正整数 的 非空 数组 nums 。请你判断是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。
+```
+- 思路：即是否能从数组中选取若干个数字，其和为数组总和的一半。
+```cpp
+class Solution {
+public:
+    bool canPartition(vector<int>& nums) {
+        int sum = accumulate(nums.begin(), nums.end(), 0);
+        if (sum % 2 == 1) {return false;}
+        int target  = sum / 2;
+        if (*max_element(nums.begin(), nums.end()) > target) {return false;}
+        vector<int> dp(target + 1);
+        dp[0] = 1;
+        for (int i = 0; i < nums.size(); ++i){
+            for (int j = target; j >= nums[i]; --j){
+                dp[j] |= dp[j - nums[i]];
+            }
+        }
+        return dp[target];
+    }
+};
+```
+
+### [目标和](https://leetcode.cn/problems/target-sum/)
+```
+给你一个整数数组 nums 和一个整数 target 。
+向数组中的每个整数前添加 '+' 或 '-' ，然后串联起所有整数，可以构造一个 表达式 ：
+例如，nums = [2, 1] ，可以在 2 之前添加 '+' ，在 1 之前添加 '-' ，然后串联起来得到表达式 "+2-1" 。
+```
+- 思路：讲题目转换为，数组中是否有若干个数的和为数组总和与target的差的一半。
+```cpp
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int sum = accumulate(nums.begin(), nums.end(), 0);
+        if (sum < target || (sum - target) % 2 == 1) {return 0;}
+        int new_target = (sum - target) / 2;
+        vector<int> dp(new_target + 1);
+        dp[0] = 1;
+        for (int i = 0; i < nums.size(); ++i){
+            for (int j = new_target; j >= nums[i]; --j){
+                dp[j] += dp[j - nums[i]];
+            }
+        }
+        return dp[new_target];
+    }
+};
+```
+
+### [一和零](https://leetcode.cn/problems/ones-and-zeroes/)
+```
+给你一个二进制字符串数组 strs 和两个整数 m 和 n 。
+请你找出并返回 strs 的最大子集的长度，该子集中 最多 有 m 个 0 和 n 个 1 。
+```
+- 思路：背包的容量有两种，需要三维动态规划。转移方程为：$d p[i][j][k]= \begin{cases}d p[i-1][j][k], & j<\text { zeros } \mid k<\text { ones } \\ \max (d p[i-1][j][k], d p[i-1][j-\text { zeros }][k-\text { ones }]+1), & j \geq \text { zeros } \& k \geq \text { ones }\end{cases}$
+```cpp
+class Solution {
+public:
+    vector<int> count_zero_and_one(string& s){
+        vector<int> ans(2);
+        int l = s.size();
+        for (int i = 0; i < l; ++i){
+            ans[s[i] - '0']++;
+        }
+        return ans;
+    }
+
+    int findMaxForm(vector<string>& strs, int m, int n) {
+        int length = strs.size();
+        vector<vector<vector<int>>> dp(length + 1, vector<vector<int>> (m + 1, vector<int> (n + 1)));
+        for (int i = 1; i <= length; ++i){
+            vector<int> ans = count_zero_and_one(strs[i - 1]);
+            int zeros = ans[0], ones = ans[1];
+            for (int j = 0; j <= m; ++j){
+                for (int k = 0; k <= n; ++k){
+                    dp[i][j][k] = dp[i - 1][j][k];
+                    if (j >= zeros && k >= ones){
+                        dp[i][j][k] = max(dp[i][j][k], dp[i - 1][j - zeros][k - ones] + 1);
+                    }
+                }
+            }
+        }
+        return dp[length][m][n];
+    }
+};
+```
+
+### [组合总和4](https://leetcode.cn/problems/combination-sum-iv/)
+```
+给你一个由 不同 整数组成的数组 nums ，和一个目标整数 target 。请你从 nums 中找出并返回总和为 target 的元素组合的个数。
+题目数据保证答案符合 32 位整数范围。请注意，顺序不同的序列被视作不同的组合。
+```
+- 思路：由于这题顺序不同的序列会被视为不同的组合，所以在循环的时候，对target的循环在外，对nums的循环在内。
+```cpp
+class Solution {
+public:
+    int combinationSum4(vector<int>& nums, int target) {
+        vector<int> dp(target + 1);
+        dp[0] = 1;
+        for (int i = 1; i <= target; ++i){
+            for (int j = 0; j < nums.size(); ++j){
+                if (nums[j] <= i && dp[i] < INT_MAX - dp[i - nums[j]]){
+                    dp[i] += dp[i - nums[j]];
+                }
+            }
+        }
+        return dp[target];
+    }
+};
+```
+
+## 补充
+
+### [乘积最大子数组](https://leetcode.cn/problems/maximum-product-subarray/)
+```
+给你一个整数数组 nums ，请你找出数组中乘积最大的非空连续子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。
+```
+- 思路：因为数组中有负数，所以最大值也可能从最小值得来。
+```cpp
+class Solution {
+public:
+    int maxProduct(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> dp_max(n), dp_min(n);
+        dp_max[0] = nums[0];
+        dp_min[0] = nums[0];
+        for (int i = 1; i < n; ++i){
+            dp_max[i] = max(dp_max[i - 1] * nums[i], max(nums[i], dp_min[i - 1] * nums[i]));
+            dp_min[i] = min(dp_min[i - 1] * nums[i], min(nums[i], dp_max[i - 1] * nums[i]));
+        }
+        return *max_element(dp_max.begin(), dp_max.end());
+    }
+};
+```
+
+### [解码方法](https://leetcode.cn/problems/decode-ways/)
+```
+一条包含字母 A-Z 的消息通过以下映射进行了 编码 ：'A' -> "1",'B' -> "2",...,'Z' -> "26"。
+要 解码 已编码的消息，所有数字必须基于上述映射的方法，反向映射回字母（可能有多种方法）。例如，"11106" 可以映射为：
+"AAJF" ，将消息分组为 (1 1 10 6)
+"KJF" ，将消息分组为 (11 10 6)
+注意，消息不能分组为  (1 11 06) ，因为 "06" 不能映射为 "F" ，这是由于 "6" 和 "06" 在映射中并不等价。
+给你一个只含数字的 非空 字符串 s ，请计算并返回 解码 方法的 总数 。
+```
+- 思路1：当i和i-1不在(0, 26]内时，$dp[i] = dp[i-1]$；否则，$dp[i] = dp[i-1] + dp[i-2]$。
+```cpp
+class Solution {
+public:
+    int numDecodings(string s) {
+        int n = s.size();
+        vector<int> dp(n + 1);
+        dp[0] = 1;
+        for (int i = 1; i <= n; ++i){
+            if (s[i - 1] != '0'){
+                dp[i] = dp[i - 1];
+            }
+            if (i > 1 && s[i - 2] != '0' && (s[i - 2] - '0') * 10 + s[i - 1] - '0' <= 26){
+                dp[i] += dp[i - 2];
+            }
+        }
+        return dp[n];
+    }
+};
+```
+- 思路2：空间优化版本，可以只采用三个变量
+```cpp
+class Solution {
+public:
+    int numDecodings(string s) {
+        int n = s.size();
+        // a = dp[i - 2], b = dp[i - 1], c = dp[i]
+        int a = 0, b = 1, c;
+        for (int i = 1; i <= n; ++i){
+            c = 0;
+            if (s[i - 1] != '0'){
+                c += b;
+            }
+            if (i > 1 && s[i - 2] != '0' && (s[i - 2] - '0') * 10 + s[i - 1] - '0' <= 26){
+                c += a;
+            }
+            a = b;
+            b = c;
+        }
+        return c;
+    }
+};
+```
