@@ -1062,3 +1062,173 @@ public:
     }
 };
 ```
+
+### [最佳买卖股票时机含冷冻期](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
+```
+给定一个整数数组prices，其中第  prices[i] 表示第 i 天的股票价格 。​
+设计一个算法计算出最大利润。在满足以下约束条件下，你可以尽可能地完成更多的交易（多次买卖一支股票）:
+卖出股票后，你无法在第二天买入股票 (即冷冻期为 1 天)。
+注意：你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）。
+```
+```cpp
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int f0 = -prices[0];
+        int f1 = 0;
+        int f2 = 0;
+        for (int i = 0; i < prices.size(); ++i){
+            int new_f0 = max(f0, f2 - prices[i]);
+            int new_f1 = f0 + prices[i];
+            int new_f2 = max(f1, f2);
+            f0 = new_f0;
+            f1 = new_f1;
+            f2 = new_f2;
+        }
+        return max(f1, f2);
+    }
+};
+```
+
+### [单词拆分2](https://leetcode.cn/problems/word-break-ii/)
+```
+给定一个字符串 s 和一个字符串字典 wordDict ，在字符串 s 中增加空格来构建一个句子，使得句子中所有的单词都在词典中。以任意顺序 返回所有这些可能的句子。
+注意：词典中的同一个单词可能在分段中被重复使用多次。
+```
+
+```cpp
+class Solution {
+private:
+    unordered_map<int, vector<string>> ans;
+    unordered_set<string> wordset;
+
+public:
+    vector<string> wordBreak(string s, vector<string>& wordDict) {
+        wordset = unordered_set(wordDict.begin(), wordDict.end());
+        backtrack(s, 0);
+        return ans[0];
+    }
+
+    void backtrack(const string& s, int index){
+        if (!ans.count(index)){
+            if (index == s.size()){
+                ans[index] = {""};
+                return;
+            }
+            ans[index] = {};
+            for (int i = index + 1; i <= s.size(); ++i){
+                string word = s.substr(index, i - index);
+                if (wordset.count(word)){
+                    backtrack(s, i);
+                    for (const string& ss:ans[i]){
+                        ans[index].push_back(ss.empty() ? word : word + " " + ss);
+                    }
+                }
+            }
+        }
+    }
+};
+```
+
+### [戳气球](https://leetcode.cn/problems/burst-balloons/)
+```
+有 n 个气球，编号为0 到 n - 1，每个气球上都标有一个数字，这些数字存在数组 nums 中。
+现在要求你戳破所有的气球。戳破第 i 个气球，你可以获得 nums[i - 1] * nums[i] * nums[i + 1] 枚硬币。 这里的 i - 1 和 i + 1 代表和 i 相邻的两个气球的序号。如果 i - 1或 i + 1 超出了数组的边界，那么就当它是一个数字为 1 的气球。
+求所能获得硬币的最大数量。
+```
+- 思路：将过程倒过来，当做每次添加一个气球。令solve(i, j)表示开区间(i, j)内最大的硬币数。那么，当$i≥j-1$时，$solve(i, j)=0$；否则，$solve(i, j) = max(val[i] * val[mid] * val[j] + solve(i, mid) + solve(mid, j))$，mid为i+1到j-1的循环。
+```cpp
+class Solution {
+public:
+    vector<vector<int>> rec;
+    vector<int> val;
+
+public:
+    int maxCoins(vector<int>& nums) {
+        int n = nums.size();
+        val.resize(n + 2);
+        for (int i = 1; i <= n; ++i){
+            val[i] = nums[i - 1];
+        }
+        val[0] = val[n + 1] = 1;
+        rec.resize(n + 2, vector<int> (n + 2, -1));
+        return solve(0, n + 1);
+    }
+
+    int solve (int left, int right){
+        if (left >= right - 1) {return 0;}
+        if (rec[left][right] != -1) {return rec[left][right];}
+        for (int i = left + 1; i < right; ++i){
+            int sum = val[left] * val[i] * val[right];
+            sum += solve(left, i) + solve(i, right);
+            rec[left][right] = max(rec[left][right], sum);
+        }
+        return rec[left][right];
+    }
+};
+```
+
+# 题目总结
+
+## Matrix
+&#x2705;[三角形最小路径和](https://leetcode.cn/problems/triangle/)
+
+&#x2705;[最小路径和](https://leetcode.cn/problems/minimum-path-sum/)
+
+&#x2705;[不同路径1](https://leetcode.cn/problems/unique-paths/)
+
+&#x2705;[不同路径2](https://leetcode.cn/problems/unique-paths-ii/)
+
+&#x2705;[最大正方形](https://leetcode.cn/problems/maximal-square/)
+
+## Sequence
+&#x2705;[爬楼梯](https://leetcode.cn/problems/climbing-stairs/)
+
+&#x2705;[跳跃游戏1](https://leetcode.cn/problems/jump-game/)
+
+&#x2705;[跳跃游戏2](https://leetcode.cn/problems/jump-game-ii/)
+
+&#x2705;[分割回文串2](https://leetcode.cn/problems/palindrome-partitioning-ii/)
+
+&#x2705;[分割回文串3](https://leetcode.cn/problems/palindrome-partitioning-iii/)
+
+&#x2705;[最长递增子序列](https://leetcode.cn/problems/longest-increasing-subsequence/)
+
+&#x2705;[单词拆分](https://leetcode.cn/problems/word-break/)
+
+## Two Swquence
+&#x2705;[最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/)
+
+&#x2705;[编辑距离](https://leetcode.cn/problems/edit-distance/)
+
+&#x2705;[交错字符串](https://leetcode.cn/problems/interleaving-string/)
+
+&#x2705;[不同的子序列](https://leetcode.cn/problems/distinct-subsequences/)
+
+## Backtrack
+&#x2705;[零钱兑换](https://leetcode.cn/problems/coin-change/)
+
+&#x2705;[零钱兑换2](https://leetcode.cn/problems/coin-change-2/)
+
+&#x2705;[背包问题](https://www.lintcode.com/problem/92/description)
+
+&#x2705;[背包问题2](https://www.lintcode.com/problem/125/description)
+
+&#x2705;[分割等和子集](https://leetcode.cn/problems/partition-equal-subset-sum/)
+
+&#x2705;[目标和](https://leetcode.cn/problems/target-sum/)
+
+&#x2705;[一和零](https://leetcode.cn/problems/ones-and-zeroes/)
+
+&#x2705;[组合总和4](https://leetcode.cn/problems/combination-sum-iv/)
+
+## 补充
+&#x2705;[乘积最大子数组](https://leetcode.cn/problems/maximum-product-subarray/)
+
+&#x2705;[解码方法](https://leetcode.cn/problems/decode-ways/)
+
+&#x2705;[最佳买卖股票时机含冷冻期](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
+
+&#x2705;[单词拆分2](https://leetcode.cn/problems/word-break-ii/)
+
+&#x2705;[戳气球](https://leetcode.cn/problems/burst-balloons/)
