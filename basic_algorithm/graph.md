@@ -503,7 +503,7 @@ public:
 };
 ```
 
-## [冗余连接](https://leetcode.cn/problems/redundant-connection/)
+## [冗余连接1](https://leetcode.cn/problems/redundant-connection/)
 ```
 树可以看成是一个连通且 无环 的 无向 图。
 给定往一棵 n 个节点 (节点值 1～n) 的树中添加一条边后的图。添加的边的两个顶点包含在 1 到 n 中间，且这条附加的边不属于树中已存在的边。图的信息记录于长度为 n 的二维数组 edges ，edges[i] = [ai, bi] 表示图中在 ai 和 bi 之间存在一条边。
@@ -538,6 +538,71 @@ public:
 };
 ```
 
+## [冗余连接2](https://leetcode.cn/problems/redundant-connection-ii/)
+```
+在本问题中，有根树指满足以下条件的 有向 图。该树只有一个根节点，所有其他节点都是该根节点的后继。该树除了根节点之外的每一个节点都有且只有一个父节点，而根节点没有父节点。
+输入一个有向图，该图由一个有着 n 个节点（节点值不重复，从 1 到 n）的树及一条附加的有向边构成。附加的边包含在 1 到 n 中的两个不同顶点间，这条附加的边不属于树中已存在的边。
+结果图是一个以边组成的二维数组 edges 。 每个元素是一对 [ui, vi]，用以表示 有向 图中连接顶点 ui 和顶点 vi 的边，其中 ui 是 vi 的一个父节点。
+返回一条能删除的边，使得剩下的图是有 n 个节点的有根树。若有多个答案，返回最后出现在给定二维数组的答案。
+```
+- 思路：由于是有向图，所以比冗余连接1更复杂，[详情题解](https://leetcode.cn/problems/redundant-connection-ii/solution/685-rong-yu-lian-jie-iibing-cha-ji-de-ying-yong-xi/)。
+```cpp
+class Solution {
+private:
+    static const int N = 1010;
+    int n;
+    int fa[N];
+
+    void init() {for (int i = 1; i <= n; ++i) {fa[i] = i;}}
+
+    int find(int x) {return x == fa[x] ? x : (fa[x] = find(fa[x]));}
+
+    void merge(int x, int y) {fa[find(y)] = find(x);}
+
+    bool istree(vector<vector<int>>& edges, int delete_id){
+        init();
+        for (int i = 0; i < n; ++i){
+            if (i == delete_id) {continue;}
+            if (find(edges[i][0]) == find(edges[i][1])){
+                return false;
+            }
+            merge(edges[i][0], edges[i][1]);
+        }
+        return true;
+    }
+
+    vector<int> getremovededge(const vector<vector<int>>& edges){
+        init();
+        for (int i = 0; i < n; ++i){
+            if (find(edges[i][0]) == find(edges[i][1])){
+                return edges[i];
+            }
+            merge(edges[i][0], edges[i][1]);
+        }
+        return {};
+    }
+
+public:
+    vector<int> findRedundantDirectedConnection(vector<vector<int>>& edges) {
+        vector<int> indegree(N);
+        n = edges.size();
+        for (int i = 0; i < n; ++i) {++indegree[edges[i][1]];}
+        vector<int> vec;
+        for (int i = n - 1; i >= 0; --i){
+            if (indegree[edges[i][1]] == 2) {vec.push_back(i);}
+        }
+        if (vec.size()){
+            if (istree(edges, vec[0])){
+                return edges[vec[0]];
+            }else {
+                return edges[vec[1]];
+            }
+        }
+        return getremovededge(edges);
+    }
+};
+```
+
 
 # 题目总结
 &#x2705;[腐烂的橘子](https://leetcode.cn/problems/rotting-oranges/)
@@ -548,8 +613,10 @@ public:
 
 &#x2705;[网络延迟时间](https://leetcode.cn/problems/network-delay-time/)
 
-[K站中转内最便宜的航班](https://leetcode.cn/problems/cheapest-flights-within-k-stops/)
+&#x2705;[K站中转内最便宜的航班](https://leetcode.cn/problems/cheapest-flights-within-k-stops/)
 
-[单词接龙](https://leetcode.cn/problems/word-ladder/)
+&#x2705;[单词接龙](https://leetcode.cn/problems/word-ladder/)
 
-[冗余连接](https://leetcode.cn/problems/redundant-connection/)
+&#x2705;[冗余连接1](https://leetcode.cn/problems/redundant-connection/)
+
+&#x2705;[冗余连接2](https://leetcode.cn/problems/redundant-connection-ii/)
