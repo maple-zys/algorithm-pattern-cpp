@@ -18,3 +18,6 @@
 - [排序算法](./basic_algorithm/sort.md)
 - [动态规划](./basic_algorithm/dp.md)
 - [图相关算法](./basic_algorithm/graph.md)
+
+## 其他
+- [滑动窗口](./others/slide_window.md)

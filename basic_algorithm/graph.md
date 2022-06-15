@@ -603,6 +603,286 @@ public:
 };
 ```
 
+## [课程表2](https://leetcode.cn/problems/course-schedule-ii/)
+```
+现在你总共有 numCourses 门课需要选，记为 0 到 numCourses - 1。给你一个数组 prerequisites ，其中 prerequisites[i] = [ai, bi] ，表示在选修课程 ai 前 必须 先选修 bi 。
+例如，想要学习课程 0 ，你需要先完成课程 1 ，我们用一个匹配来表示：[0,1] 。
+返回你为了学完所有课程所安排的学习顺序。可能会有多个正确的顺序，你只要返回 任意一种 就可以了。如果不可能完成所有课程，返回 一个空数组 。
+```
+- 思路1：dfs的时候，每个节点的状态除了搜索过，未搜索，还有一个正在搜索，如果访问到正在搜索的节点，说明有环
+```cpp
+class Solution {
+private:
+    vector<vector<int>> edges;
+    vector<int> visited; // 0 未访问，1访问中，2访问结束;
+    bool valid = true;
+    vector<int> ans;
+
+public:
+    void dfs(int p){
+        visited[p] = 1;
+        for (int to : edges[p]){
+            if (visited[to] == 0){
+                dfs(to);
+                if (!valid){
+                    return;
+                }
+            }else if (visited[to] == 1){
+                valid = false;
+                return;
+            }
+        }
+        visited[p] = 2;
+        ans.push_back(p);
+    }
+
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        edges.resize(numCourses);
+        visited.resize(numCourses);
+        for (const auto& iter : prerequisites) {edges[iter[1]].push_back(iter[0]);}
+        for (int i = 0; i < numCourses && valid; ++i){
+            if (!visited[i]){
+                dfs(i);
+            }
+        }
+        if (!valid) {return {};}
+        reverse(ans.begin(), ans.end());
+        return ans;
+    }
+};
+```
+- 思路2：Kahn算法，即bfs解决拓扑排序，计算每个节点的入度，每次将入度为0的节点入队
+```cpp
+class Solution{
+private:
+    vector<vector<int>> edges;
+    vector<int> indegree;
+    vector<int> ans;
+
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        edges.resize(numCourses);
+        indegree.resize(numCourses);
+        for (const auto& iter : prerequisites){
+            edges[iter[1]].push_back(iter[0]);
+            ++indegree[iter[0]];
+        }
+        queue<int> q;
+        for (int i = 0; i < numCourses; ++i){
+            if (indegree[i] == 0){
+                q.push(i);
+            }
+        }
+        while (!q.empty()){
+            int p = q.front();
+            q.pop();
+            ans.push_back(p);
+            for (int to : edges[p]){
+                --indegree[to];
+                if (indegree[to] == 0){
+                    q.push(to);
+                }
+            }
+        }
+        if (ans.size() != numCourses) {return {};}
+        return ans;
+    }
+};
+```
+
+## [火星词典](https://leetcode.cn/problems/alien-dictionary/)
+```
+现有一种使用英语字母的火星语言，这门语言的字母顺序与英语顺序不同。
+给你一个字符串列表 words ，作为这门语言的词典，words 中的字符串已经 按这门新语言的字母顺序进行了排序 。
+请你根据该词典还原出此语言中已知的字母顺序，并 按字母递增顺序 排列。若不存在合法字母顺序，返回 "" 。若存在多种可能的合法字母顺序，返回其中 任意一种 顺序即可。
+字符串 s 字典顺序小于 字符串 t 有两种情况：
+在第一个不同字母处，如果 s 中的字母在这门外星语言的字母顺序中位于 t 中字母之前，那么 s 的字典顺序小于 t 。
+如果前面 min(s.length, t.length) 字母都相同，那么 s.length < t.length 时，s 的字典顺序也小于 t 。
+```
+- 思路1：改题在拓扑排序的dfs方面并没有太大的难度，主要是理解题意并构建有向图
+```cpp
+class Solution {
+private:
+    unordered_map<char, vector<char>> edges;
+    unordered_map<char, int> states;
+    bool valid = true;
+    string order;
+    int index;
+    const int VISITING = 1, VISITED = 2;
+
+public:
+    void addedge(string& s1, string& s2){
+        int l1 = s1.size(), l2 = s2.size();
+        int l_min = min(l1, l2);
+        int index = 0;
+        while (index < l_min){
+            char c1 = s1[index], c2 = s2[index];
+            if (c1 != c2){
+                edges[c1].push_back(c2);
+                break;
+            }
+            ++index;
+        }
+        if (index == l_min && l1 > l2){
+            valid = false;
+        }
+    }
+
+    void dfs(char c){
+        states[c] = VISITING;
+        for (char to : edges[c]){
+            if (!states.count(to)){
+                dfs(to);
+                if (!valid) {return;}
+            }else if (states[to] == VISITING){
+                valid = false;
+                return;
+            }
+        }
+        states[c] = VISITED;
+        order[index] = c;
+        --index;
+    }
+
+    string alienOrder(vector<string>& words) {
+        for (string& w : words){
+            for (int i = 0; i < w.size(); ++i){
+                char c = w[i];
+                if (!edges.count(c)){
+                    edges[c] = vector<char> ();
+                }
+            }
+        }
+        for (int i = 1; i < words.size() && valid; ++i){
+            addedge(words[i - 1], words[i]);
+        }
+        order = string(edges.size(), ' ');
+        index = edges.size() - 1;
+        for (auto& e : edges){
+            if (!states.count(e.first)){
+                dfs(e.first);
+            }
+        }
+        if (!valid) {return "";}
+        return order;
+    }
+};
+```
+- 思路2：Kahn算法
+```cpp
+class Solution{
+private:
+    unordered_map<char, vector<char>> edges;
+    unordered_map<char, int> indegree;
+    bool valid = true;
+
+public:
+    void addedge(string& s1, string& s2){
+        int l1 = s1.size(), l2 = s2.size();
+        int l_min = min(l1, l2);
+        int index = 0;
+        while (index < l_min){
+            char c1 = s1[index], c2 = s2[index];
+            if (c1 != c2){
+                edges[c1].push_back(c2);
+                ++indegree[c2];
+                break;
+            }
+            ++index;
+        }
+        if (index == l_min && l1 > l2){
+            valid = false;
+        }
+    }
+
+    string alienOrder(vector<string>& words) {
+        for (string& w : words){
+            for (int i = 0; i < w.size(); ++i){
+                char c = w[i];
+                if (!edges.count(c)){
+                    edges[c] = vector<char> ();
+                }
+            }
+        }
+        for (int i = 1; i < words.size() && valid; ++i){
+            addedge(words[i - 1], words[i]);
+        }
+        if (!valid) {return "";}
+        queue<int> q;
+        for (auto& iter : edges){
+            if (!indegree.count(iter.first)){
+                q.push(iter.first);
+            }
+        }
+        string order;
+        while (!q.empty()){
+            char c = q.front();
+            q.pop();
+            order.push_back(c);
+            for (char to : edges[c]){
+                --indegree[to];
+                if (indegree[to] == 0){
+                    q.push(to);
+                }
+            }
+        }
+        return order.size() == edges.size() ? order : "";
+    }
+};
+```
+
+## [序列重建](https://leetcode.cn/problems/sequence-reconstruction/)
+```
+给定一个长度为 n 的整数数组 nums ，其中 nums 是范围为 [1，n] 的整数的排列。还提供了一个 2D 整数数组 sequences ，其中 sequences[i] 是 nums 的子序列。
+检查 nums 是否是唯一的最短 超序列 。最短 超序列 是 长度最短 的序列，并且所有序列 sequences[i] 都是它的子序列。对于给定的数组 sequences ，可能存在多个有效的 超序列 。
+例如，对于 sequences = [[1,2],[1,3]] ，有两个最短的 超序列 ，[1,2,3] 和 [1,3,2] 。
+而对于 sequences = [[1,2],[1,3],[1,2,3]] ，唯一可能的最短 超序列 是 [1,2,3] 。[1,2,3,4] 是可能的超序列，但不是最短的。
+如果 nums 是序列的唯一最短 超序列 ，则返回 true ，否则返回 false 。
+子序列 是一个可以通过从另一个序列中删除一些元素或不删除任何元素，而不改变其余元素的顺序的序列。
+```
+- 思路：判断拓扑排序是否唯一，需要用bfs，即Kahm算法，在每层循环判断队列中是否只有一个元素，是则唯一，否则不唯一
+```cpp
+class Solution {
+public:
+    bool sequenceReconstruction(vector<int>& nums, vector<vector<int>>& sequences) {
+        unordered_map<int, vector<int>> edges;
+        unordered_set<int> nodes;
+        unordered_map<int, int> indegrees;
+        for (auto& iter : sequences){
+            nodes.insert(iter[0]);
+            for (int i = 1; i < iter.size(); ++i){
+                edges[iter[i - 1]].emplace_back(iter[i]);
+                indegrees[iter[i]]++;
+                nodes.insert(iter[i]);
+            }
+        }
+        vector<int> path;
+        queue<int> q;
+        for (int p : nodes){
+            if (indegrees[p] == 0){
+                q.push(p);
+            }
+        }
+        while (!q.empty()){
+            if (q.size() >= 2) {return false;}
+            int p = q.front();
+            q.pop();
+            path.push_back(p);
+            for (int to : edges[p]){
+                --indegrees[to];
+                if (indegrees[to] == 0){
+                    q.push(to);
+                }
+            }
+        }
+
+        return nums == path;
+    }
+};
+```
+
+
+
 
 # 题目总结
 &#x2705;[腐烂的橘子](https://leetcode.cn/problems/rotting-oranges/)
@@ -620,3 +900,7 @@ public:
 &#x2705;[冗余连接1](https://leetcode.cn/problems/redundant-connection/)
 
 &#x2705;[冗余连接2](https://leetcode.cn/problems/redundant-connection-ii/)
+
+&#x2705;[火星词典](https://leetcode.cn/problems/alien-dictionary/)
+
+&#x2705;[序列重建](https://leetcode.cn/problems/sequence-reconstruction/)
